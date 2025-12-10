@@ -1,21 +1,33 @@
+// 📌 summary.js — Generate AI Summary using OpenRouter
+
 const express = require("express");
 const router = express.Router();
-const openrouterSummary = require("../services/openrouter.js").default;
+const openrouterSummary = require("../services/openrouter");
 
-router.post("/summary", async (req, res) => {
+// POST /api/summary
+router.post("/", async (req, res) => {
+    console.log("REQ BODY RECEIVED >>> ", req.body);
+
     const { text } = req.body;
 
-    if (!text) {
-        return res.json({ summary: "❌ No text provided" });
+    // ❌ No text provided
+    if (!text || text.trim() === "") {
+        return res.json({ summary: "⚠ No text provided" });
     }
 
     try {
+        // Call OpenRouter summary generator
         const summary = await openrouterSummary(text);
-        res.json({ summary });
+
+        return res.json({
+            summary: summary || "⚠ Summary unavailable.",
+        });
 
     } catch (err) {
-        console.error(err);
-        res.json({ summary: "❌ Summary generation error" });
+        console.error("SUMMARY ERROR >>> ", err);
+        return res.json({
+            summary: "⚠ Error generating summary.",
+        });
     }
 });
 
