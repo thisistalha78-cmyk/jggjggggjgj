@@ -1,30 +1,39 @@
-import fetch from "node-fetch";
+const fetch = require("node-fetch");
 
-export default async function openrouterSummary(text) {
+async function openrouterSummary(text) {
     const API_KEY = process.env.OPENROUTER_API_KEY;
 
-    if (!API_KEY) return "❌ Missing OpenRouter API key";
+    if (!API_KEY) {
+        console.log("❌ OPENROUTER_API_KEY missing!");
+        return "Summary unavailable (missing API key).";
+    }
 
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${API_KEY}`,
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://yourapp.com",
+                "X-Title": "DealFury Summary",
             },
             body: JSON.stringify({
-                model: "google/gemma-3n-e2b-it:free",
+                model: "google/gemma-2-9b-it:free",
                 messages: [
-                    { role: "system", content: "Summarize the deals in simple language." },
+                    { role: "system", content: "Summarize this deal text briefly." },
                     { role: "user", content: text }
                 ]
             })
         });
 
-        const data = await response.json();
-        return data?.choices?.[0]?.message?.content || "⚠️ Summary unavailable.";
+        const data = await res.json();
+
+        return data?.choices?.[0]?.message?.content || "⚠ No summary returned.";
+
     } catch (err) {
-        console.error("OpenRouter Error:", err);
-        return "❌ AI summary failed.";
+        console.log("OpenRouter Error:", err);
+        return "⚠ Error calling AI.";
     }
 }
+
+module.exports = openrouterSummary;
